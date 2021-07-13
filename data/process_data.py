@@ -123,6 +123,7 @@ def main():
         df = load_data(messages_filepath, categories_filepath)
 
         print('Cleaning data...')
+        df, category_names = separate_categories(df)
         df = clean_data(df)
         
         print('Saving data...\n    DATABASE: {}'.format(database_filepath))
