@@ -1,10 +1,8 @@
 import sys
 import pandas as pd
-import numpy as np
 import sqlite3
 import nltk
 import joblib
-from sqlalchemy import create_engine
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from sklearn.pipeline import Pipeline
