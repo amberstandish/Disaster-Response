@@ -76,13 +76,14 @@ def load_data(database_filepath):
         Y: pandas DataFrame. Holds the categories of the messages.
     '''
     # load data from database
-    conn = sqlite3.connect(database_filepath)
+    conn = sqlite3.connect(f"{database_filepath}")
     df = pd.read_sql("SELECT * FROM ETL_table", con=conn)
     conn.close()
 
     # separate out data into X and Y    
     X = df[['message', 'genre']]
     Y = df.drop(labels=['id', 'message', 'original', 'genre'], axis=1)
+    Y = Y.astype(int)
     
     return X, Y
 
@@ -169,13 +170,13 @@ def evaluate_model(model, X_test, Y_test):
     # get model predictions
     Y_pred = model.predict(X_test)
     category_names = Y_test.columns
-    Y_pred = pd.DataFrame(Y_pred, category_names)
+    Y_pred = pd.DataFrame(Y_pred, columns = category_names)
     
     # calculate performance metrics
     reports = []
     for column in Y_test.columns:
         reports.append(classification_report(Y_test[column], Y_pred[column], \
-                                             zero_division=0))
+                                             zero_division=0, output_dict=True))
     
     # print out performance metrics for each category
     i=0

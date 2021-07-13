@@ -1,6 +1,7 @@
 import json
 import plotly
 import pandas as pd
+import numpy as np
 
 from nltk.stem import WordNetLemmatizer
 from nltk.tokenize import word_tokenize
@@ -8,11 +9,54 @@ from nltk.tokenize import word_tokenize
 from flask import Flask
 from flask import render_template, request, jsonify
 from plotly.graph_objs import Bar
-from sklearn.externals import joblib
+import joblib
 from sqlalchemy import create_engine
+from sklearn.base import BaseEstimator, TransformerMixin
 
 
 app = Flask(__name__)
+
+class DirectCategoriser(BaseEstimator, TransformerMixin):
+    '''
+    DirectCategoriser is a transformer class that inherits from sklearns's
+    BaseEstimator and TransformerMixin.
+    
+    METHODS:
+        fit: returns itself.
+        transform: evaluates whether the genre is 'direct'.
+    '''
+    def fit(self, x, y=None):
+        '''
+        This fit function is needed for it to be used in the Pipeline.
+        
+        INPUTS:
+            x: list, series or DataFrame. The independent variable(s).
+            y: list, series or DataFrame. The dependent variable(s).
+        '''
+        return self
+    
+    def transform(self, X):
+        '''
+        This transformer takes a series or list and iterates through it. If an 
+        individual item is 'direct', then it will return as True. It is 
+        intended to be used on the genre column.
+        
+        INPUTS:
+            X: iterable object. Intended to be the genre column.
+        
+        RETURNS:
+            X_categorised: pandas DataFrame. A DataFrame of Trues and Falses
+                describing whether each message's genre is direct.
+        '''
+        X_categorised = []
+        for x in X:
+            if x == 'direct':
+                X_categorised.append(True)
+            else:
+                X_categorised.append(False)
+
+        return pd.DataFrame(X_categorised)
+    
 
 def tokenize(text):
     tokens = word_tokenize(text)
@@ -26,11 +70,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/DisasterResponse.db')
+engine = create_engine('sqlite:///data/DisasterResponse.db')
 df = pd.read_sql_table('ETL_table', engine)
 
 # load model
-model = joblib.load("../models/model.pkl")
+model = joblib.load("models/classifier.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -47,16 +91,22 @@ def index():
     category_names = df.columns[4:]
     category_counts = []
     for column in category_names:
-        category_counts.append(column.count(1))
+        category_counts.append(column.count('1'))
         
     # count average length of each message by category
     avg_lengths = []
+    j = 0
     for column in category_names:
         total_length = 0
         for i in df[column]:
-            total_length += len(i)
-        avg_length = total_length / category_counts[column]
+            if df[column][i] == 1:
+                total_length += len(df['message'][i])
+        try:
+            avg_length = total_length / category_counts[j]
+        except:
+            avg_length = 0
         avg_lengths.append(avg_length)
+        j+=1
     
     # create visuals
     graphs = [
@@ -128,10 +178,11 @@ def index():
 @app.route('/go')
 def go():
     # save user input in query
-    query = request.args.get('query', '') 
+    query = request.args.get('query', '')
+    genre = request.args.get('genre', '')
 
     # use model to predict classification for query
-    classification_labels = model.predict([query])[0]
+    classification_labels = model.predict(np.array(query, genre).reshape(-1,1,1))[0]
     classification_results = dict(zip(df.columns[4:], classification_labels))
 
     # This will render the go.html Please see that file. 

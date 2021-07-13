@@ -71,7 +71,7 @@ def separate_categories(df):
     df_expanded = df.drop(labels=['categories'], axis=1)
     
     # concatenate the original dataframe with the new categories DataFrame
-    df_expanded = df.merge(categories)
+    df_expanded = df_expanded.merge(categories)
     
     return df_expanded, category_names
 
@@ -109,7 +109,7 @@ def save_data(df, database_filename):
         df: pandas DataFrame. The DataFrame returned by clean_data().
         database_filename: str. The name of the database to store df in.
     '''
-    engine = create_engine('sqlite:///data/' + database_filename)
+    engine = create_engine(f'sqlite:///{database_filename}')
     df.to_sql('ETL_table', engine, index=False)  
 
 
@@ -124,7 +124,7 @@ def main():
 
         print('Cleaning data...')
         df, category_names = separate_categories(df)
-        df = clean_data(df)
+        df = clean_data(df, category_names)
         
         print('Saving data...\n    DATABASE: {}'.format(database_filepath))
         save_data(df, database_filepath)
