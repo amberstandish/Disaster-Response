@@ -26,11 +26,11 @@ def tokenize(text):
     return clean_tokens
 
 # load data
-engine = create_engine('sqlite:///../data/YourDatabaseName.db')
-df = pd.read_sql_table('YourTableName', engine)
+engine = create_engine('sqlite:///../data/DisasterResponse.db')
+df = pd.read_sql_table('ETL_table', engine)
 
 # load model
-model = joblib.load("../models/your_model_name.pkl")
+model = joblib.load("../models/model.pkl")
 
 
 # index webpage displays cool visuals and receives user input text for model
@@ -39,12 +39,26 @@ model = joblib.load("../models/your_model_name.pkl")
 def index():
     
     # extract data needed for visuals
-    # TODO: Below is an example - modify to extract data for your own visuals
+    # count number of messages in each genre
     genre_counts = df.groupby('genre').count()['message']
     genre_names = list(genre_counts.index)
     
+    # count number of messages in each category
+    category_names = df.columns[4:]
+    category_counts = []
+    for column in category_names:
+        category_counts.append(column.count(1))
+        
+    # count average length of each message by category
+    avg_lengths = []
+    for column in category_names:
+        total_length = 0
+        for i in df[column]:
+            total_length += len(i)
+        avg_length = total_length / category_counts[column]
+        avg_lengths.append(avg_length)
+    
     # create visuals
-    # TODO: Below is an example - modify to create your own visuals
     graphs = [
         {
             'data': [
@@ -61,6 +75,42 @@ def index():
                 },
                 'xaxis': {
                     'title': "Genre"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=category_counts
+                )
+            ],
+
+            'layout': {
+                'title': 'Distribution of Categories',
+                'yaxis': {
+                    'title': "Count"
+                },
+                'xaxis': {
+                    'title': "Category"
+                }
+            }
+        },
+        {
+            'data': [
+                Bar(
+                    x=category_names,
+                    y=avg_lengths
+                )
+            ],
+
+            'layout': {
+                'title': 'Average length of messages in each category',
+                'yaxis': {
+                    'title': "Number of characters"
+                },
+                'xaxis': {
+                    'title': "Category"
                 }
             }
         }
