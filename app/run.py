@@ -91,20 +91,19 @@ def index():
     category_names = df.columns[4:]
     category_counts = []
     for column in category_names:
-        category_counts.append(column.count('1'))
+        category_counts.append(df[column].sum())
         
     # count average length of each message by category
     avg_lengths = []
     j = 0
     for column in category_names:
         total_length = 0
-        for i in df[column]:
+        i=0
+        while i < df[column].shape[0]:
             if df[column][i] == 1:
                 total_length += len(df['message'][i])
-        try:
-            avg_length = total_length / category_counts[j]
-        except:
-            avg_length = 0
+            i+=1
+        avg_length = total_length / category_counts[j]
         avg_lengths.append(avg_length)
         j+=1
     
@@ -182,9 +181,15 @@ def go():
     genre = request.args.get('genre', '')
 
     # use model to predict classification for query
-    classification_labels = model.predict(np.array(query, genre).reshape(-1,1,1))[0]
-    classification_results = dict(zip(df.columns[4:], classification_labels))
-
+    #classification_labels = model.predict(np.array(query, genre).reshape(-1,1,1))[0]
+    #classification_results = dict(zip(df.columns[4:], classification_labels))
+    inputs = {'message': [query], 'genre': [genre]}
+    inputs_df = pd.DataFrame.from_dict(inputs)
+    
+    category_names = df.columns[4:]
+    classification_labels = model.predict(inputs_df)
+    classification_results = dict(zip(category_names, classification_labels[0]))
+    
     # This will render the go.html Please see that file. 
     return render_template(
         'go.html',
