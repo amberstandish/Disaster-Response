@@ -32,6 +32,7 @@ The aim of this project was to:
 ## <a name="files"></a> File Descriptions
 Apart from the README file, there are a number of files in the repository, as explained below:
 
+```
 - app
 | - template
 | |- master.html  # main page of web app
@@ -45,7 +46,7 @@ Apart from the README file, there are a number of files in the repository, as ex
 |- train_classifier.py # NLP/ML pipeline
 
 - README.md
-
+```
 
 ## <a name="results"></a> Results
 1. In order to prepare the model and files needed and run the web app, run the following commands:
